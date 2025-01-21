@@ -86,6 +86,10 @@ message IdFeature {
     // when use pai-fg, you do not need to set the param.
     // when use own fg and data contain null value, you can set the param for fill null
     optional string fg_encoded_default_value = 30;
+    // out-of-vocab(OOV) id bucketize value when use vocab_list or vocab_dict
+    // when use default_bucketize_value, we will not add additional bucketize_value of
+    // `default_value`=0, bucketize_value of <OOV>=1 into vocab_list or vocab_dict
+    optional uint64 default_bucketize_value = 31;
 
     // TODO: constrains
 }
@@ -169,6 +173,10 @@ message ComboFeature {
     // when use pai-fg, you do not need to set the param.
     // when use own fg and data contain null value, you can set the param for fill null
     optional string fg_encoded_default_value = 30;
+    // out-of-vocab(OOV) id bucketize value when use vocab_list or vocab_dict
+    // when use default_bucketize_value, we will not add additional bucketize_value of
+    // `default_value`=0, bucketize_value of <OOV>=1 into vocab_list or vocab_dict
+    optional uint64 default_bucketize_value = 31;
 
     // TODO: constrains
 }
@@ -229,6 +237,10 @@ message LookupFeature {
     // when use pai-fg, you do not need to set the param.
     // when use own fg and data contain null value, you can set the param for fill null
     optional string fg_encoded_default_value = 30;
+    // out-of-vocab(OOV) id bucketize value when use vocab_list or vocab_dict
+    // when use default_bucketize_value, we will not add additional bucketize_value of
+    // `default_value`=0, bucketize_value of <OOV>=1 into vocab_list or vocab_dict
+    optional uint64 default_bucketize_value = 31;
 
     oneof dense_emb {
         // autodis embedding
@@ -298,6 +310,10 @@ message MatchFeature {
     // when use pai-fg, you do not need to set the param.
     // when use own fg and data contain null value, you can set the param for fill null
     optional string fg_encoded_default_value = 30;
+    // out-of-vocab(OOV) id bucketize value when use vocab_list or vocab_dict
+    // when use default_bucketize_value, we will not add additional bucketize_value of
+    // `default_value`=0, bucketize_value of <OOV>=1 into vocab_list or vocab_dict
+    optional uint64 default_bucketize_value = 31;
 
     oneof dense_emb {
         // autodis embedding
@@ -488,6 +504,11 @@ message SequenceIdFeature {
     // when use pai-fg, you do not need to set the param.
     // when use own fg and data contain null value, you can set the param for fill null
     optional string fg_encoded_default_value = 30;
+    // out-of-vocab(OOV) id bucketize value when use vocab_list or vocab_dict
+    // when use default_bucketize_value, we will not add additional bucketize_value of
+    // `default_value`=0, bucketize_value of <OOV>=1 into vocab_list or vocab_dict
+    optional uint64 default_bucketize_value = 31;
+
     // TODO: constrains
 }
 

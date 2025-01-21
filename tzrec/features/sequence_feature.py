@@ -10,7 +10,6 @@
 # limitations under the License.
 
 import os
-from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -314,16 +313,12 @@ class SequenceIdFeature(IdFeature):
             fg_cfg["hash_bucket_size"] = self.config.hash_bucket_size
         elif self.config.HasField("num_buckets"):
             fg_cfg["num_buckets"] = self.config.num_buckets
-        elif len(self.config.vocab_list) > 0:
-            fg_cfg["vocab_list"] = [self.config.default_value, "<OOV>"] + list(
-                self.config.vocab_list
-            )
-            fg_cfg["default_bucketize_value"] = 1
+        elif len(self.vocab_list) > 0:
+            fg_cfg["vocab_list"] = self.vocab_list
+            fg_cfg["default_bucketize_value"] = self.default_bucketize_value
         elif len(self.config.vocab_dict) > 0:
-            vocab_dict = OrderedDict(self.config.vocab_dict.items())
-            vocab_dict[self.config.default_value] = 0
-            fg_cfg["vocab_dict"] = vocab_dict
-            fg_cfg["default_bucketize_value"] = 1
+            fg_cfg["vocab_dict"] = self.vocab_dict
+            fg_cfg["default_bucketize_value"] = self.default_bucketize_value
         if self.config.HasField("value_dim"):
             assert (
                 self.config.value_dim == 1

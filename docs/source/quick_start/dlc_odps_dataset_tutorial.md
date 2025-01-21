@@ -22,22 +22,7 @@ bash upload_data.sh ${ODPS_PROJECT_NAME}
 ### 前置条件
 
 - 在[MaxCompute控制台](https://maxcompute.console.aliyun.com/)的「租户管理」->「租户属性」页面打开**开放存储(Storage API)开关**。
-- 根据需要赋予用户权限，具体参考[租户权限](https://help.aliyun.com/zh/maxcompute/user-guide/perform-access-control-based-on-tenant-level-roles#section-mt7-tmu-f49)。
-
-```bash
-{
-    "Version": "1",
-    "Statement": [
-        {
-            "Action": "odps:Usage",
-            "Effect": "Allow",
-            "Resource": [
-                "acs:odps:*:regions/*/quotas/pay-as-you-go"
-            ]
-        }
-    ]
-}
-```
+- 「租户管理」->「新增成员」给相应用户授予「admin」权限；或参考[租户权限](https://help.aliyun.com/zh/maxcompute/user-guide/overview-1#cabfa502c288o)文档，精细授予用户Quota的使用权限
 
 ## 创建DLC任务
 

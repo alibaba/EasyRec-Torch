@@ -267,13 +267,20 @@ class IdFeatureTest(unittest.TestCase):
 
     @parameterized.expand(
         [
-            ["", ["abc", "efg"], [2, 3, 1], [2, 0, 1]],
-            ["xyz", ["abc", "efg"], [2, 3, 0, 1], [2, 1, 1]],
+            ["", ["abc", "efg"], None, [2, 3, 1], [2, 0, 1]],
+            ["xyz", ["abc", "efg"], None, [2, 3, 0, 1], [2, 1, 1]],
+            ["", ["xyz", "abc", "efg"], 0, [1, 2, 0], [2, 0, 1]],
+            ["xyz", ["xyz", "abc", "efg"], 0, [1, 2, 0, 0], [2, 1, 1]],
         ],
         name_func=test_util.parameterized_name_func,
     )
     def test_id_feature_with_vocab_list(
-        self, default_value, vocab_list, expected_values, expected_lengths
+        self,
+        default_value,
+        vocab_list,
+        default_bucketize_value,
+        expected_values,
+        expected_lengths,
     ):
         id_feat_cfg = feature_pb2.FeatureConfig(
             id_feature=feature_pb2.IdFeature(
@@ -285,10 +292,13 @@ class IdFeatureTest(unittest.TestCase):
                 default_value=default_value,
             )
         )
+        if default_bucketize_value is not None:
+            id_feat_cfg.id_feature.default_bucketize_value = default_bucketize_value
+
         id_feat = id_feature_lib.IdFeature(id_feat_cfg, fg_mode=FgMode.FG_NORMAL)
 
         expected_emb_bag_config = EmbeddingBagConfig(
-            num_embeddings=4,
+            num_embeddings=4 if default_bucketize_value is None else 3,
             embedding_dim=16,
             name="id_feat_emb",
             feature_names=["id_feat"],
@@ -296,7 +306,7 @@ class IdFeatureTest(unittest.TestCase):
         )
         self.assertEqual(repr(id_feat.emb_bag_config), repr(expected_emb_bag_config))
         expected_emb_config = EmbeddingConfig(
-            num_embeddings=4,
+            num_embeddings=4 if default_bucketize_value is None else 3,
             embedding_dim=16,
             name="id_feat_emb",
             feature_names=["id_feat"],
@@ -311,13 +321,20 @@ class IdFeatureTest(unittest.TestCase):
 
     @parameterized.expand(
         [
-            ["", {"abc": 2, "efg": 2}, [2, 2, 1], [2, 0, 1]],
-            ["xyz", {"abc": 2, "efg": 2}, [2, 2, 0, 1], [2, 1, 1]],
+            ["", {"abc": 2, "efg": 2}, None, [2, 2, 1], [2, 0, 1]],
+            ["xyz", {"abc": 2, "efg": 2}, None, [2, 2, 0, 1], [2, 1, 1]],
+            ["", {"abc": 1, "efg": 1}, 0, [1, 1, 0], [2, 0, 1]],
+            ["xyz", {"xyz": 0, "abc": 1, "efg": 1}, 0, [1, 1, 0, 0], [2, 1, 1]],
         ],
         name_func=test_util.parameterized_name_func,
     )
     def test_id_feature_with_vocab_dict(
-        self, default_value, vocab_dict, expected_values, expected_lengths
+        self,
+        default_value,
+        vocab_dict,
+        default_bucketize_value,
+        expected_values,
+        expected_lengths,
     ):
         id_feat_cfg = feature_pb2.FeatureConfig(
             id_feature=feature_pb2.IdFeature(
@@ -329,10 +346,13 @@ class IdFeatureTest(unittest.TestCase):
                 default_value=default_value,
             )
         )
+        if default_bucketize_value is not None:
+            id_feat_cfg.id_feature.default_bucketize_value = default_bucketize_value
+
         id_feat = id_feature_lib.IdFeature(id_feat_cfg, fg_mode=FgMode.FG_NORMAL)
 
         expected_emb_bag_config = EmbeddingBagConfig(
-            num_embeddings=3,
+            num_embeddings=3 if default_bucketize_value is None else 2,
             embedding_dim=16,
             name="id_feat_emb",
             feature_names=["id_feat"],
@@ -340,7 +360,7 @@ class IdFeatureTest(unittest.TestCase):
         )
         self.assertEqual(repr(id_feat.emb_bag_config), repr(expected_emb_bag_config))
         expected_emb_config = EmbeddingConfig(
-            num_embeddings=3,
+            num_embeddings=3 if default_bucketize_value is None else 2,
             embedding_dim=16,
             name="id_feat_emb",
             feature_names=["id_feat"],

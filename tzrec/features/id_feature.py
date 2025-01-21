@@ -9,8 +9,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Tuple
 
 import pyarrow as pa
@@ -27,7 +25,6 @@ from tzrec.features.feature import (
 )
 from tzrec.protos import feature_pb2
 from tzrec.protos.feature_pb2 import FeatureConfig
-from tzrec.utils.logging_util import logger
 
 
 class IdFeature(BaseFeature):
@@ -83,17 +80,10 @@ class IdFeature(BaseFeature):
             num_embeddings = self.config.hash_bucket_size
         elif self.config.HasField("num_buckets"):
             num_embeddings = self.config.num_buckets
-        elif len(self.config.vocab_list) > 0:
-            num_embeddings = len(self.config.vocab_list) + 2
-        elif len(self.config.vocab_dict) > 0:
-            is_rank_zero = os.environ.get("RANK", "0") == "0"
-            if min(list(self.config.vocab_dict.values())) <= 1 and is_rank_zero:
-                logger.warn(
-                    "min index of vocab_dict in "
-                    f"{self.__class__.__name__}[{self.name}] should "
-                    "start from 2. index0 is default_value, index1 is <OOV>."
-                )
-            num_embeddings = max(list(self.config.vocab_dict.values())) + 1
+        elif len(self.vocab_list) > 0:
+            num_embeddings = len(self.vocab_list)
+        elif len(self.vocab_dict) > 0:
+            num_embeddings = max(list(self.vocab_dict.values())) + 1
         else:
             raise ValueError(
                 f"{self.__class__.__name__}[{self.name}] must set hash_bucket_size"
@@ -174,17 +164,13 @@ class IdFeature(BaseFeature):
         elif self.config.HasField("hash_bucket_size"):
             fg_cfg["hash_bucket_size"] = self.config.hash_bucket_size
             fg_cfg["value_type"] = "string"
-        elif len(self.config.vocab_list) > 0:
-            fg_cfg["vocab_list"] = [self.config.default_value, "<OOV>"] + list(
-                self.config.vocab_list
-            )
-            fg_cfg["default_bucketize_value"] = 1
+        elif len(self.vocab_list) > 0:
+            fg_cfg["vocab_list"] = self.vocab_list
+            fg_cfg["default_bucketize_value"] = self.default_bucketize_value
             fg_cfg["value_type"] = "string"
-        elif len(self.config.vocab_dict) > 0:
-            vocab_dict = OrderedDict(self.config.vocab_dict.items())
-            vocab_dict[self.config.default_value] = 0
-            fg_cfg["vocab_dict"] = vocab_dict
-            fg_cfg["default_bucketize_value"] = 1
+        elif len(self.vocab_dict) > 0:
+            fg_cfg["vocab_dict"] = self.vocab_dict
+            fg_cfg["default_bucketize_value"] = self.default_bucketize_value
             fg_cfg["value_type"] = "string"
         elif self.config.HasField("num_buckets"):
             fg_cfg["num_buckets"] = self.config.num_buckets

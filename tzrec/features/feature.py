@@ -55,6 +55,7 @@ from tzrec.protos.data_pb2 import FgMode
 from tzrec.protos.feature_pb2 import FeatureConfig, SequenceFeature
 from tzrec.utils import config_util
 from tzrec.utils.load_class import get_register_class_meta
+from tzrec.utils.logging_util import logger
 
 _FEATURE_CLASS_MAP = {}
 _meta_cls = get_register_class_meta(_FEATURE_CLASS_MAP)
@@ -230,6 +231,8 @@ class BaseFeature(object, metaclass=_meta_cls):
         self._data_group = BASE_DATA_GROUP
         self._inputs = None
         self._side_inputs = None
+        self._vocab_list = None
+        self._vocab_dict = None
 
         self._fg_encoded_kwargs = {}
         self._fg_encoded_multival_sep = fg_encoded_multival_sep or chr(3)
@@ -605,6 +608,61 @@ class BaseFeature(object, metaclass=_meta_cls):
                     # list of list
                     default_value = default_value[0]
             return default_value
+
+    @property
+    def vocab_list(self) -> List[str]:
+        """Vocab list."""
+        if self._vocab_list is None:
+            if len(self.config.vocab_list) > 0:
+                if self.config.HasField("default_bucketize_value"):
+                    # when set default_bucketize_value, we do not add additional
+                    # `default_value` and <OOV> vocab to vocab_list
+                    assert self.config.default_bucketize_value < len(
+                        self.config.vocab_list
+                    ), (
+                        "default_bucketize_value should be less than len(vocab_list) "
+                        f"in {self.__class__.__name__}[{self.name}]"
+                    )
+                    self._vocab_list = list(self.config.vocab_list)
+                else:
+                    self._vocab_list = [self.config.default_value, "<OOV>"] + list(
+                        self.config.vocab_list
+                    )
+            else:
+                self._vocab_list = []
+        return self._vocab_list
+
+    @property
+    def vocab_dict(self) -> Dict[str, int]:
+        """Vocab dict."""
+        if self._vocab_dict is None:
+            if len(self.config.vocab_dict) > 0:
+                vocab_dict = OrderedDict(self.config.vocab_dict.items())
+                if self.config.HasField("default_bucketize_value"):
+                    # when set default_bucketize_value, we do not add additional
+                    # `default_value` and <OOV> vocab to vocab_dict
+                    self._vocab_dict = vocab_dict
+                else:
+                    is_rank_zero = os.environ.get("RANK", "0") == "0"
+                    if min(list(self.config.vocab_dict.values())) <= 1 and is_rank_zero:
+                        logger.warn(
+                            "min index of vocab_dict in "
+                            f"{self.__class__.__name__}[{self.name}] should "
+                            "start from 2. index0 is default_value, index1 is <OOV>."
+                        )
+                    vocab_dict[self.config.default_value] = 0
+                    self._vocab_dict = vocab_dict
+            else:
+                self._vocab_dict = {}
+        return self._vocab_dict
+
+    @property
+    def default_bucketize_value(self) -> int:
+        """Default bucketize value."""
+        if self.config.HasField("default_bucketize_value"):
+            return self.config.default_bucketize_value
+        else:
+            return 1
 
     def assets(self) -> Dict[str, str]:
         """Asset file paths."""

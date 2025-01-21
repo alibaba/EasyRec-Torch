@@ -82,7 +82,7 @@ feature_configs {
 
 - **num_buckets**: buckets数量, 仅仅当输入是integer类型时，可以使用num_buckets
 
-- **vocab_list**: 指定词表，适合取值比较少可以枚举的特征，如星期，月份，星座等
+- **vocab_list**: 指定词表，适合取值比较少可以枚举的特征，如星期，月份，星座等，**编号需要从2开始**，编码0预留给默认值，编码1预留给超出词表的词
 
 - **vocab_dict**: 指定字典形式词表，适合多个词需要编码到同一个编号情况，**编号需要从2开始**，编码0预留给默认值，编码1预留给超出词表的词
 
@@ -91,6 +91,8 @@ feature_configs {
 - **weighted**: 是否为带权重的Id特征，输入形式为`k1:v1\x1dk2:v2`
 
 - **value_dim**: 默认值是0，可以设置1，value_dim=0时支持多值ID输出
+
+- **default_bucketize_value**: （可选）指定超出词表的词的编码。当配置了default_bucketize_value时，vocab_list和vocab_dict将不会预留编码给默认值和超出词表的词，用户可完全自主控制vocab_list或vocab_dict
 
 - NOTE: hash_bucket_size, num_buckets, vocab_list, 只能指定其中之一，不能同时指定
 
