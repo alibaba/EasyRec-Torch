@@ -31,7 +31,6 @@ from torchrec.distributed.model_parallel import (
 
 # NOQA
 from torchrec.distributed.train_pipeline import TrainPipelineSparseDist
-from torchrec.inference.modules import quantize_embeddings
 from torchrec.inference.state_dict_transform import (
     state_dict_gather,
     state_dict_to_device,
@@ -43,6 +42,7 @@ from torchrec.optim.keyed import CombinedOptimizer, KeyedOptimizerWrapper
 from torchrec.optim.optimizers import in_backward_optimizer_filter
 
 from tzrec.acc.aot_utils import export_model_aot
+from tzrec.acc.quant_utils import quantize_embeddings
 from tzrec.acc.trt_utils import export_model_trt, get_trt_max_batch_size
 from tzrec.acc.utils import (
     export_acc_config,
