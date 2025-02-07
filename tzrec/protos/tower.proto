@@ -4,13 +4,21 @@ package tzrec.protos;
 import "tzrec/protos/module.proto";
 import "tzrec/protos/loss.proto";
 import "tzrec/protos/metric.proto";
-
+import "tzrec/protos/seq_encoder.proto";
 message Tower {
     // input feature group name
     required string input = 1;
     // mlp config
     required MLP mlp = 2;
 };
+
+message HSTUMatchTower {
+    // input feature group name
+    required string input = 1;
+    // mlp config
+    required HSTUEncoder hstu_encoder = 2;
+}
+
 
 message DINTower {
     // input feature group name

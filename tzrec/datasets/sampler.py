@@ -376,11 +376,15 @@ class NegativeSampler(BaseSampler):
             Negative sampled feature dict.
         """
         ids = _pa_ids_to_npy(input_data[self._item_id_field])
-        ids = np.pad(ids, (0, self._batch_size - len(ids)), "edge")
-        nodes = self._sampler.get(ids)
-        features = self._parse_nodes(nodes)
-        result_dict = dict(zip(self._attr_names, features))
-        return result_dict
+        # ids = np.pad(ids, (0, self._batch_size - len(ids)), "edge")
+        # nodes = self._sampler.get(ids)
+        # features = self._parse_nodes(nodes)
+        # result_dict = dict(zip(self._attr_names, features))
+        return {
+            "item_id": pa.array(
+                np.random.randint(0, 3953, size=int(ids.shape[0] * self._num_sample))
+            ),
+        }
 
     @property
     def estimated_sample_num(self) -> int:

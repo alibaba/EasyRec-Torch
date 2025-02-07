@@ -307,6 +307,7 @@ class BaseDataset(IterableDataset, metaclass=_dataset_meta_cls):
         Returns:
             an instance of Batch.
         """
+        input_data["item_id"] = input_data["item_id"].values
         use_sample_mask = self._mode == Mode.TRAIN and (
             self._data_config.negative_sample_mask_prob > 0
             or self._data_config.sample_mask_prob > 0

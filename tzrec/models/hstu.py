@@ -19,8 +19,10 @@ from torch._tensor import Tensor
 from tzrec.datasets.utils import Batch
 from tzrec.features.feature import BaseFeature
 from tzrec.models.match_model import MatchModel, MatchTower
+from tzrec.modules.sequence import HSTUEncoder
 from tzrec.protos import model_pb2, tower_pb2
 from tzrec.protos.models import match_model_pb2
+from tzrec.utils import config_util
 
 
 @torch.fx.wrap
@@ -60,18 +62,33 @@ class HSTUMatchTower(MatchTower):
         )
         self.init_input()
         self.tower_config = tower_config
+        if "user" in self.tower_config.input:
+            encoder_config = tower_config.hstu_encoder
+            seq_config_dict = config_util.config_to_kwargs(encoder_config)
+            sequence_dim = self.embedding_group.group_total_dim(
+                f"{self.tower_config.input}.sequence"
+            )
+            seq_config_dict["sequence_dim"] = sequence_dim
+            self.seq_encoder = HSTUEncoder(**seq_config_dict)
 
-    def forward(self, batch: Batch) -> torch.Tensor:
+    def forward(self, batch: Batch, is_train: bool = False) -> torch.Tensor:
         """Forward the tower.
 
         Args:
-            batch (Batch): input batch data.
+            batch: Input batch containing the data to process
+            is_train: Boolean flag indicating whether the model is in training mode
 
-        Return:
-            embedding (dict): tower output embedding.
+        Returns:
+            torch.Tensor: The output tensor from the tower
         """
         grouped_features = self.build_input(batch)
-        output = grouped_features[self._group_name]
+        if "user" in self.tower_config.input:
+            if is_train:
+                output = self.seq_encoder(grouped_features, is_train=True)
+            else:
+                output = self.seq_encoder(grouped_features, is_train=False)
+        else:
+            output = grouped_features[self._group_name]
 
         if self.tower_config.input == "item":
             output = F.normalize(output, p=2.0, dim=1, eps=1e-6)
@@ -138,8 +155,8 @@ class HSTUMatch(MatchModel):
         Return:
             predictions (dict): a dict of predicted result.
         """
-        user_tower_emb = self.user_tower(batch)
         item_tower_emb = self.item_tower(batch)
+        user_tower_emb = self.user_tower(batch, is_train=self.training)
         _update_dict_tensor(
             self._loss_collection, self.user_tower.group_variational_dropout_loss
         )
@@ -147,7 +164,7 @@ class HSTUMatch(MatchModel):
             self._loss_collection, self.item_tower.group_variational_dropout_loss
         )
         ui_sim = (
-            self.sim(user_tower_emb, item_tower_emb, neg_for_each_sample=False)
+            self.sim(user_tower_emb, item_tower_emb, neg_for_each_sample=True)
             / self._model_config.temperature
         )
         return {"similarity": ui_sim}
